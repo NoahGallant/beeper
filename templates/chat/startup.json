@@ -1,0 +1,29 @@
+[
+    {
+        "timeId": 0,
+        "message": "Hello!",
+        "attachments": [],
+        "senderKey": "",
+        "signedMessage": "",
+        "signedAttachments": [],
+        "reactions":[]
+    },
+    {   
+        "timeId": 0,
+        "message": "Hello!",
+        "attachments": [],
+        "senderKey": "",
+        "signedMessage": "",
+        "signedAttachments": [],
+        "reactions":[]
+    },
+    {   
+        "timeId": 0,
+        "message": "Hello!",
+        "attachments": [],
+        "senderKey": "",
+        "signedMessage": "",
+        "signedAttachments": [],
+        "reactions":[]
+    }
+]

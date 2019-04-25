@@ -7,7 +7,36 @@ function store (state, emitter) {
 
   const ready = thunky(openDocumentsDB)
 
-  ready(() => { emitter.emit('render') })
+  ready(() => {
+    emitter.emit('render')
+  })
+
+  emitter.on('writeNewAccountRecord', (keyHex, docName) => {
+    ready(() => {
+      if (state.documents.find(doc => doc.key === keyHex)) return
+      writeDocumentRecord(keyHex, docName, err => {
+        if (err) throw err
+      })
+    })
+  })
+
+  emitter.on('writeNewChatRecord', (keyHex, docName) => {
+    ready(() => {
+      if (state.documents.find(doc => doc.key === keyHex)) return
+      writeDocumentRecord(keyHex, docName, err => {
+        if (err) throw err
+      })
+    })
+  })
+
+  emitter.on('writeNewHelloRecord', (keyHex, docName) => {
+    ready(() => {
+      if (state.documents.find(doc => doc.key === keyHex)) return
+      writeDocumentRecord(keyHex, docName, err => {
+        if (err) throw err
+      })
+    })
+  })
 
   emitter.on('writeNewDocumentRecord', (keyHex, docName) => {
     ready(() => {
@@ -141,7 +170,7 @@ function store (state, emitter) {
     })
   }
 
-  function updateDocLastSync ({key, syncedUploadLength, syncedDownloadLength}) {
+  function updateDocLastSync ({ key, syncedUploadLength, syncedDownloadLength }) {
     ready(() => {
       const db = state.documentsDB
       const objectStore = db.transaction('documents', 'readwrite')

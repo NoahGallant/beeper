@@ -1,99 +1,20 @@
 const html = require('choo/html')
 const css = require('sheetify')
-const prettyHash = require('pretty-hash')
 const header = require('../components/header')
 const button = require('../components/button')
-const footer = require('../components/footer')
+const accountView = require('./account')
+const createAccountForm = require('./createAccount')
+const chatView = require('./chat')
+const loadingView = require('./loading')
 
 const prefix = css`
   :host {
     .content {
-      margin: 1rem 1rem 2rem 1rem;
+      margin: 1em;
     }
-    .uvp {
-      box-shadow: 0 0 20px rgba(0,0,0,.15);
-      padding: 1em;
-      background-color: var(--color-white);
-    }
-    .uvp h4 {
-      margin: 0.5rem 1rem 1rem 1rem;
-      font-size: 1.3rem;
-      text-align: center;
-    }
-    h3 {
-      margin-top: 2rem;
-    }
-    ul {
-      padding: 0 0.3rem 0.5rem 0.3rem;
-    }
-    li {
-      list-style-type: none;
-      border: 1px solid var(--color-neutral-20);
-      border-radius: 0.5rem;
-      margin: 0 0 0.5rem 0;
-      padding: 0 0.5rem;
-      min-height: 3rem;
-      position: relative;
-      cursor: pointer;
-      font-size: 1.2rem;
-      background-color: var(--color-white);
-      display: flex;
-
-      .link {
-        margin: 1rem 0.5rem;
-      }
-
-      span {
-        font-size: 12px;
-        font-family: monospace;
-        line-height: 1rem;
-        position: absolute;
-        top: 0.1rem;
-        right: 0.3rem;
-        pointer-events: none;
-      }
-    }
-    .solo {
-      background-image: url(/img/bg-landing-page.svg);
-      background-position: center;
-      background-repeat: no-repeat;
-      height: 16rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-
-      button {
-        height: 4rem;
-      }
-
-      .addLinkButton button {
-        margin-top: 1.5rem;
-        height: 2.5rem;
-        font-size: 0.8rem;
-        font-weight: 500;
-      }
-
-    }
-
-    .notSolo {
-      display: flex;
-      justify-content: space-between;
-      margin: 0 0.5rem;
-
-      .createButton {
-        margin-right: 0.5rem;
-      }
-
-      .addLinkButton {
-        margin-left: 0.5rem;
-      }
-    }
-
-    .addLinkButton button {
-      color: var(--color-green);
-      background: var(--color-white);
-      border-color: var(--color-green);
+    input[type="text"] {
+      width: 100%;
+      font-size: 1.5rem;
     }
   }
 `
@@ -101,59 +22,113 @@ const prefix = css`
 module.exports = mainView
 
 function mainView (state, emit) {
-  emit('DOMTitleChange', 'Dat Shopping List')
-  const documents = state.documents.map(doc => {
-    return html`
-      <li onclick=${click} onkeydown=${keydown} tabindex="0" role="button">
-        <span>${prettyHash(doc.key)}</span>
-        <a href="/doc/${doc.key}" class="link" tabindex="-1">${doc.name}</a>
-      </li>
-    `
-    function click (event) {
-      const link = event.target.querySelector('a')
-      if (link) link.click()
+  const key = html`<input type="text" id="discoveryKey" placeholder="key">`
+  const password = html`<input type="text" id="password" placeholder="password">`
+  const createChatInput = html`<input type="text" id="chatName" placeholder="Chat Name">`
+  const loadChatInput = html`<input type="text" id="chatKey" placeholder="Chat Key">`
+  let divStack = []
+
+  /*
+  if (window.localStorage.login.key && !state.loggedIn) {
+    emit('login', { keyHex: window.localStorage.login.key, password: window.localStorage.login.password })
+  } */
+
+  if (state.loggedIn) { // load application
+    divStack.push(accountView(state, emit))
+    if (state.chat) {
+      divStack.push(chatView(state, emit))
+    } else {
+      divStack.push(chatFormView())
     }
-    function keydown (event) {
-      if (event.key === ' ' || event.key === 'Enter') {
-        event.target.querySelector('a').click()
-      }
-    }
-  })
-  const docHeader = documents.length > 0 ? html`<h3>Shopping Lists</h3>` : null
-  const soloCta = documents.length === 0 ? 'solo' : 'notSolo'
+  } else {
+    divStack.push(loginView())
+  }
+
   return html`
     <body class=${prefix}>
       ${header(state)}
-      <section class="content">
-        <div class="uvp">
-          <h4>Test drive multi-writer Dat!</h4>
+      <div class="content">
+      ${divStack}
+      </div>
+      `
+
+  function chatFormView () {
+    return html`<div>
+                  <form onsubmit=${createChat}>
+                    ${createChatInput}
+                    <br/>
+                    <p>
+                      ${button.submit('Create new p2p chat')}
+                    </p>
+                  </form>
+                  <form onsubmit=${loadChat}>
+                    ${loadChatInput}
+                    <br/>
+                    <p>
+                      ${button.submit('Load p2p chat from key')}
+                    </p>
+                  </form>
+                `
+  }
+
+  function createChat (event) {
+    console.log('chat button hit')
+    const chatName = event.target.querySelector('#chatName').value
+    if (chatName) {
+      const submitButton = event.target.querySelector('input[type="submit"]')
+      submitButton.setAttribute('disabled', 'disabled')
+      state.loading = true
+      emit('createChat', { chatName })
+    }
+    event.preventDefault()
+  }
+
+  function loadChat (event) {
+    const chatKey = event.target.querySelector('#chatKey').value
+    if (chatKey) {
+      const submitButton = event.target.querySelector('input[type="submit"]')
+      submitButton.setAttribute('disabled', 'disabled')
+      state.loading = true
+      emit('loadChat', { chatKey })
+    }
+    event.preventDefault()
+  }
+
+  function loginView () {
+    return html`
+      <div class="login">
+        <h2>
+          Enter credentials to login!
+        </h2>
+        <form onsubmit=${login}>
+          ${key}
+          <br/>
+          ${password}
           <p>
-            This is a <b>Progressive Web App</b> built to demonstrate the use of the new 
-            <b>multi-writer</b> capabilities from the 
-            <a href="https://datproject.org/" class="link">Dat Project</a>.
+            ${button.submit('Login')}
           </p>
-          <p>
-            Make shopping lists and use them online or offline, and sync between multiple
-            devices or users. Read the <a href="https://blog.datproject.org/2018/05/14/dat-shopping-list/"
-            class="link" target="_blank">blog post!</a>
-          </p>
-        </p>
-        <header>
-          ${docHeader}
-        </header>
-        <ul>
-          ${documents}
-        </ul>
-        <div class=${soloCta}>
-          <div class="createButton">
-            ${button.button('Create a new Shopping List', () => emit('pushState', '/create'))}
-          </div>
-          <div class="addLinkButton">
-            ${button.button('Have a Link? Paste it Here', () => emit('pushState', '/add-link'))}
-          </div>
-        </div>
-      </section>
-      ${footer(state)}
-    </body>
-  `
+        </form>
+        <br/>
+        <hr/>
+        <br/>
+        <h2>
+          Or create an account by entering a password:
+        </h2>
+        ${createAccountForm(state, emit)}
+      </div>
+    `
+  }
+
+  function login (event) {
+    const password = event.target.querySelector('#password').value
+    const discoveryKey = event.target.querySelector('#discoveryKey').value
+    if (password && discoveryKey) {
+      const textInput = event.target.querySelector('input[type="text"]')
+      textInput.setAttribute('disabled', 'disabled')
+      const submitButton = event.target.querySelector('input[type="submit"]')
+      submitButton.setAttribute('disabled', 'disabled')
+      emit('login', { keyHex: discoveryKey, password })
+    }
+    event.preventDefault()
+  }
 }
