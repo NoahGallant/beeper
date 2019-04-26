@@ -2,10 +2,10 @@
   "name": "beeper",
   "version": "0.0.1",
   "description": "A PWA p2p web chat application",
-  "author": "Nooah Gallant",
+  "author": "Noah Gallant",
   "main": "server/index.js",
   "bin": {
-    "dat-shopping-list": "./server/index.js"
+    "beeper": "./server/index.js"
   },
   "scripts": {
     "start": "node server"
@@ -24,7 +24,6 @@
     "clipboard-copy": "^2.0.0",
     "compression": "^1.7.2",
     "dat": "^13.13.0",
-    "dat-colors": "^3.5.1",
     "deep-equal": "^1.0.1",
     "express": "^4.16.3",
     "express-ws": "^3.0.0",
@@ -32,6 +31,7 @@
     "focus-trap": "^2.4.5",
     "helmet-csp": "^2.7.0",
     "hsts": "^2.1.0",
+    "hypercore-crypto": "^1.0.0",
     "hyperdiscovery": "^7.1.0",
     "jszip": "^3.1.5",
     "mkdirp": "^0.5.1",
@@ -40,7 +40,7 @@
     "pretty-hash": "^1.0.1",
     "random-access-idb": "^1.0.4",
     "random-access-memory": "^3.0.0",
-    "sharp": "^0.20.2",
+    "sharp": "^0.20.8",
     "sheetify": "^7.3.2",
     "sheetify-nested": "^1.0.2",
     "sw-precache": "^5.2.1",

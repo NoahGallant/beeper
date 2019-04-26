@@ -14,7 +14,6 @@ const accountView = require('./views/account')
 const addLinkView = require('./views/addLink')
 const shoppingListView = require('./views/shoppingList')
 
-css('dat-colors')
 css('./index.css')
 
 const app = choo()
