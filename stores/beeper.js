@@ -101,7 +101,13 @@ function store (state, emitter) {
     if (!state.chat) {
       console.log('problem')
     }
-    state.localFeedLength = null
+    if (state.cancelGatewayReplication) state.cancelGatewayReplication()
+    state.key = state.chat.key
+    state.archive = state.chat.archive
+    state.cancelGatewayReplication = connectToGateway(
+      state.archive, updateSyncStatus, updateConnecting
+    )
+
     let messageJson = require('../templates/chat/message.json')
     messageJson.message = message
     messageJson.senderKey = state.account.key
@@ -128,9 +134,9 @@ function store (state, emitter) {
     const storage = rai(`doc-${keyHex}`)
     const archive = hyperdrive(storage, keyHex)
     archive.ready(() => {
-      dumpWriters(archive)
-      state.archive = archive
       if (state.cancelGatewayReplication) state.cancelGatewayReplication()
+      state.key = keyHex
+      state.archive = archive
       state.cancelGatewayReplication = connectToGateway(
         archive, updateSyncStatus, updateConnecting
       )
@@ -147,9 +153,8 @@ function store (state, emitter) {
           if (data.toChat) {
             addFriendToChat(friend)
           } else {
-            dumpWriters(archive)
-            state.archive = state.chat.archive
             if (state.cancelGatewayReplication) state.cancelGatewayReplication()
+            state.archive = state.chat.archive
             state.cancelGatewayReplication = connectToGateway(
               state.chat.archive, updateSyncStatus, updateConnecting
             )
@@ -172,6 +177,12 @@ function store (state, emitter) {
         if (err) {
           throw err
         } else {
+          if (state.cancelGatewayReplication) state.cancelGatewayReplication()
+          state.archive = state.chat.archive
+          state.key = state.chat.key
+          state.cancelGatewayReplication = connectToGateway(
+            state.chat.archive, updateSyncStatus, updateConnecting
+          )
           emitter.emit('render')
         }
       })
