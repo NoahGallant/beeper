@@ -155,6 +155,7 @@ function store (state, emitter) {
           } else {
             if (state.cancelGatewayReplication) state.cancelGatewayReplication()
             state.archive = state.chat.archive
+            state.key = state.chat.archive.key
             state.cancelGatewayReplication = connectToGateway(
               state.chat.archive, updateSyncStatus, updateConnecting
             )
