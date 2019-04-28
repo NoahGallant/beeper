@@ -33,7 +33,7 @@ function mainView (state, emit) {
     emit('login', { keyHex: window.localStorage.login.key, password: window.localStorage.login.password })
   } */
 
-  if (state.loggedIn) { // load application
+  if (state.account && state.account.loggedIn) { // load application
     divStack.push(accountView(state, emit))
     if (state.chat) {
       divStack.push(chatView(state, emit))

@@ -7,7 +7,7 @@ module.exports = chatListView
 
 function chatListView (state, emit) {
   console.log('renderCalled')
-  if (!state.loggedIn || !state.chat) {
+  if (!state.account || !state.chat) {
     return badRequestView()
   }
 
@@ -29,7 +29,7 @@ function chatListView (state, emit) {
       let senderName = ''
       if (!message.senderKey) {
         senderName = 'Bot'
-      } else if (message.senderKey === state.key) {
+      } else if (message.senderKey === state.account.key) {
         senderName = 'Me'
       } else {
         let senderKey = message.senderKey
@@ -61,7 +61,7 @@ function chatListView (state, emit) {
       <h2>
         ${title}
       </h2>
-      Key: ${key}
+      Chat Key: ${key}
       <br/>
       <form onsubmit=${addKey}>
         ${addKeyInput}

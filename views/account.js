@@ -6,7 +6,7 @@ let accountInputs = []
 module.exports = accountView
 
 function accountView (state, emit) {
-  if (!state.loggedIn) {
+  if (!state.account) {
     console.log('no archive!')
     return html`<body><div>Bad request</div></body>`
   }
@@ -31,17 +31,17 @@ function accountView (state, emit) {
     }
   }
 
-  let keyHex = state.key
+  let keyHex = state.account.key
 
   let inputs = accountInputs
 
   return html`
     <div class="account">
       <h2>
-        Hello!
+        Beeper
       </h2>
       <div class="key">
-        ${keyHex}
+        Your key: ${keyHex}
       </div>
       <form onsubmit=${updateDetails}>
         ${inputs}
