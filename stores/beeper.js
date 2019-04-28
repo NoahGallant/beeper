@@ -238,16 +238,14 @@ function store (state, emitter) {
         chatArchive, updateSyncStatus, updateConnecting
       )
       let key32 = state.key32
-      console.log('key32: ' + key32)
-      chatArchive.readFile('/boxes/' + key32 + '.txt', 'utf8', (err, box) => {
+      chatArchive.readFile('/settings.json', 'utf8', (err, settings) => {
         if (err) {
           console.log(err)
-          state.chat = null
-          state.chatError = 2
         } else {
-          chatArchive.readFile('/settings.json', 'utf8', (err, settings) => {
+          chatArchive.readFile('/boxes/' + key32 + '.txt', 'utf8', (err, box) => {
             if (err) {
-              console.log(err)
+              state.chat = null
+              state.chatError = 2
             } else {
               chatArchive.readFile('.publicKey32', 'utf8', (err, publicKey) => {
                 if (err) throw err
@@ -275,21 +273,26 @@ function store (state, emitter) {
                       state.cancelGatewayReplication = connectToGateway(
                         newArchive, updateSyncStatus, updateConnecting
                       )
-                      let path = `/logins/` + Date.now() + `-` + state.key + `.txt`
-                      let block = Date.now().toString()
-                      newArchive.writeFile(path, block, err => {
-                        if (err) {
-                          console.log(err)
-                        } else {
+                      if (chatArchive.writeable) {
+                        state.cancelGatewayReplication()
+                        state.chat = {}
+                        state.chat.settings = JSON.parse(settings)
+                        state.chat.archive = chatArchive
+                        state.chat.key = keyHex
+                        state.chat.sKey = secretKey
+                        emitter.emit('render')
+                      } else {
+                        newArchive.authorize(state.sKey, () => {
+                          console.log('authorized!')
                           state.cancelGatewayReplication()
                           state.chat = {}
                           state.chat.settings = JSON.parse(settings)
                           state.chat.archive = chatArchive
-                          state.chat.sKey = secretKey
                           state.chat.key = keyHex
+                          state.chat.sKey = secretKey
                           emitter.emit('render')
-                        }
-                      })
+                        })
+                      }
                     })
                   } else {
                     state.chatError = 2
