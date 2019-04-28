@@ -364,13 +364,20 @@ function store (state, emitter) {
         chatArchive.writeFile(`/settings.json`, settings, err => {
           if (err) {
           } else {
-            let startupScript = require('../templates/chat/startup.json')
-            let stringScript = JSON.stringify(startupScript)
-            let encryptedChat = encryptSecret({ chat: stringScript }, nacl.util.encodeBase64(secretKey.slice(0, 32)))
-            chatArchive.writeFile(`/chat.enc.json`, encryptedChat, err => {
-              if (err) {
-              } else {
-                cb()
+            let pSlice = secretKey.slice(0, 32)
+            let key32 = nacl.util.encodeBase64(nacl.box.keyPair.fromSecretKey(pSlice))
+            chatArchive.writeFile(`.publicKey32`, key32, err => {
+              if (err) throw err
+              else {
+                let startupScript = require('../templates/chat/startup.json')
+                let stringScript = JSON.stringify(startupScript)
+                let encryptedChat = encryptSecret({ chat: stringScript }, nacl.util.encodeBase64(secretKey.slice(0, 32)))
+                chatArchive.writeFile(`/chat.enc.json`, encryptedChat, err => {
+                  if (err) {
+                  } else {
+                    cb()
+                  }
+                })
               }
             })
           }
