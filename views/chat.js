@@ -20,7 +20,10 @@ function chatListView (state, emit) {
   let messageDivs = []
 
   if (!state.chat.data) {
-    emit('readChat', state)
+    if (state.chat.key) {
+      let keyHex = state.chat.key
+      emit('readChat', keyHex)
+    }
   } else {
     for (var i in state.chat.data.messages) {
       let message = state.chat.data.messages[i]
