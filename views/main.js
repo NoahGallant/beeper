@@ -34,10 +34,10 @@ function mainView (state, emit) {
   } */
 
   if (state.account && state.account.loggedIn) { // load application
-    divStack.push(accountView(state, emit))
     if (state.chat) {
       divStack.push(chatView(state, emit))
     } else {
+      divStack.push(accountView(state, emit))
       divStack.push(chatFormView())
     }
   } else {

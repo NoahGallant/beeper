@@ -168,10 +168,11 @@ function store (state, emitter) {
 
   function addFriendToChat (friend) {
     let theirPublicKey = friend.key32
+    let chatSecretKey = state.chat.sKey
     const { publicKey: key, secretKey } = crypto.keyPair()
     state.chat.archive.authorize(secretKey, err => {
       if (err) { throw err }
-      let message = { key: nacl.util.encodeBase64(key), secretKey: nacl.util.encodeBase64(secretKey) }
+      let message = { key: nacl.util.encodeBase64(key), secretKey: nacl.util.encodeBase64(secretKey), chatSecretKey: nacl.util.encodeBase64(chatSecretKey) }
       var chatSKey32 = state.chat.sKey.slice(0, 32)
       var box = encryptBox(message, theirPublicKey, nacl.util.encodeBase64(chatSKey32))
       state.chat.archive.writeFile('/boxes/' + theirPublicKey + '.txt', box, err => {
@@ -191,15 +192,27 @@ function store (state, emitter) {
   }
 
   function readChatOnline (cb) {
-    state.chat.archive.readFile('/chat.enc.json', 'utf8', (err, data) => {
-      if (err) { throw err }
-      console.log(state.chat)
-      let sKey32 = state.chat.sKey.slice(0, 32)
-      let chatData = decryptSecret(data, nacl.util.encodeBase64(sKey32))
-      console.log(chatData)
-      state.chat.data = {}
-      state.chat.data.messages = JSON.parse(chatData.chat)
-      cb()
+    console.log('reading....')
+    state.localFeedLength = null
+    let keyHex = state.chat.archive.key
+    emitter.emit('fetchDocLastSync', keyHex)
+    const storage = rai(`doc-${keyHex}`)
+    const archive = hyperdrive(storage, keyHex)
+    archive.ready(() => {
+      if (state.cancelGatewayReplication) state.cancelGatewayReplication()
+      state.key = keyHex
+      state.archive = archive
+      state.cancelGatewayReplication = connectToGateway(
+        archive, updateSyncStatus, updateConnecting
+      )
+      archive.readFile('/chat.enc.json', 'utf8', (err, data) => {
+        if (err) { throw err }
+        let sKey32 = state.chat.sKey.slice(0, 32)
+        let chatData = decryptSecret(data, nacl.util.encodeBase64(sKey32))
+        state.chat.data = {}
+        state.chat.data.messages = JSON.parse(chatData.chat)
+        cb()
+      })
     })
   }
 
@@ -217,19 +230,16 @@ function store (state, emitter) {
       state.chatError = 1
       return ''
     }
-
     state.localFeedLength = null
     emitter.emit('fetchDocLastSync', keyHex)
     const storage = rai(`doc-${keyHex}`)
-    let archive = hyperdrive(storage, keyHex)
-
     state.loading = true
-    emitter.emit('render')
+    const archive = hyperdrive(storage, keyHex)
     archive.ready(() => {
-      console.log('chat ready')
-      state.archive = archive
-      state.key = archive.key
+      console.log('here')
       if (state.cancelGatewayReplication) state.cancelGatewayReplication()
+      state.key = keyHex
+      state.archive = archive
       state.cancelGatewayReplication = connectToGateway(
         archive, updateSyncStatus, updateConnecting
       )
@@ -250,58 +260,23 @@ function store (state, emitter) {
                 else {
                   console.log('here!')
                   let sKey = nacl.util.encodeBase64(state.account.sKey.slice(0, 32))
-                  let { key, secretKey } = decryptBox(box, publicKey, sKey)
-                  if (key && secretKey) {
+                  let { key, secretKey, chatSecretKey } = decryptBox(box, publicKey, sKey)
+                  if (key && secretKey && chatSecretKey) {
                     key = nacl.util.decodeBase64(key)
                     secretKey = nacl.util.decodeBase64(secretKey)
+                    chatSecretKey = nacl.util.decodeBase64(chatSecretKey)
+                    state.chat = {}
+                    state.chat.settings = JSON.parse(settings)
                     if (archive.writeable) {
-                      state.chat = {}
-                      state.chat.settings = JSON.parse(settings)
                       state.chat.archive = archive
                       state.chat.key = keyHex
                       state.chat.sKey = secretKey
                       emitter.emit('render')
                     } else {
-                      var opts = {
-                        metadata: function (name, opts) {
-                          if (name === 'secret_key') return secretKey
-                          if (name === 'archive') return archive
-                          return
-                        },
-                        content: function (name, opts) {
-                          return // other storage
-                        }
-                      }
-                      state.localFeedLength = null
-                      let newArchive = hyperdrive(storage, keyHex, { opts })
-                      newArchive.ready(() => {
-                        console.log('archive constructed')
-                        state.key = newArchive.key
-                        state.archive = newArchive
-                        if (state.cancelGatewayReplication) state.cancelGatewayReplication()
-                        state.cancelGatewayReplication = connectToGateway(
-                          newArchive, updateSyncStatus, updateConnecting
-                        )
-                        newArchive.db.authorize(state.account.sKey, err => {
-                          if (err) { throw err }
-                          console.log('key authorized')
-                          newArchive.db.close(err => {
-                            if (err) { throw err }
-                            state.key = archive.key
-                            state.archive = archive
-                            if (state.cancelGatewayReplication) state.cancelGatewayReplication()
-                            state.cancelGatewayReplication = connectToGateway(
-                              archive, updateSyncStatus, updateConnecting
-                            )
-                            state.chat = {}
-                            state.chat.settings = JSON.parse(settings)
-                            state.chat.archive = archive
-                            state.chat.key = keyHex
-                            state.chat.sKey = secretKey
-                            emitter.emit('render')
-                          })
-                        })
-                      })
+                      data = { archive, secretKey, keyHex, chatSecretKey }
+                      console.log('secretKey: ' + data.secretKey)
+                      data.keyHex = keyHex
+                      loadChatAuthorizing(data)
                     }
                   } else {
                     state.chatError = 2
@@ -317,14 +292,61 @@ function store (state, emitter) {
     })
   })
 
+  function loadChatAuthorizing (data) {
+    console.log('loadChatAuthorizing')
+    let { archive, secretKey, keyHex, chatSecretKey } = data
+    state.localFeedLength = null
+    emitter.emit('fetchDocLastSync', keyHex)
+    const storage = rai(`doc-${keyHex}`)
+    var opts = {
+      metadata: function (name, opts) {
+        if (name === 'secret_key') return secretKey
+        return
+      },
+      content: function (name, opts) {
+        return // other storage
+      }
+    }
+    let newArchive = hyperdrive(storage, keyHex, { opts })
+    newArchive.ready(() => {
+      if (state.cancelGatewayReplication) state.cancelGatewayReplication()
+      state.key = newArchive.key
+      state.archive = newArchive
+      state.cancelGatewayReplication = connectToGateway(
+        newArchive, updateSyncStatus, updateConnecting
+      )
+      newArchive.authorize(state.account.sKey, err => {
+        if (err) { console.log('authorization problem ' + err) }
+        state.localFeedLength = null
+        emitter.emit('fetchDocLastSync', keyHex)
+        const storage = rai(`doc-${keyHex}`)
+        const archive = hyperdrive(storage, keyHex)
+        archive.ready(() => {
+          if (state.cancelGatewayReplication) state.cancelGatewayReplication()
+          state.key = archive.key
+          state.archive = archive
+          state.cancelGatewayReplication = connectToGateway(
+            archive, updateSyncStatus, updateConnecting
+          )
+          state.chat.archive = archive
+          state.chat.key = keyHex
+          state.chat.sKey = chatSecretKey
+          emitter.emit('render')
+        })
+      })
+    })
+  }
+
   emitter.on('createChat', data => {
     if (!state.account.key) {
       state.chatError = 0
       return ''
     }
-
     const chatName = data.chatName
-    const { publicKey: key, secretKey } = crypto.keyPair()
+    let { publicKey: key, secretKey } = crypto.keyPair()
+    let sKey = nacl.util.encodeBase64(secretKey)
+    let dKey = nacl.util.decodeBase64(sKey)
+    console.log(dKey)
     const keyHex = key.toString('hex')
     emitter.emit('fetchDocLastSync', keyHex)
     const storage = rai(`doc-${keyHex}`)
@@ -381,7 +403,7 @@ function store (state, emitter) {
               else {
                 let startupScript = require('../templates/chat/startup.json')
                 let stringScript = JSON.stringify(startupScript)
-                let encryptedChat = encryptSecret({ chat: stringScript }, nacl.util.encodeBase64(secretKey.slice(0, 32)))
+                let encryptedChat = encryptSecret({ chat: stringScript }, nacl.util.encodeBase64(dKey.slice(0, 32)))
                 chatArchive.writeFile(`/chat.enc.json`, encryptedChat, err => {
                   if (err) {
                   } else {
