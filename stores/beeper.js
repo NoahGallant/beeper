@@ -173,7 +173,7 @@ function store (state, emitter) {
     state.chat.archive.authorize(secretKey, err => {
       if (err) { throw err }
       let message = { key: nacl.util.encodeBase64(key), secretKey: nacl.util.encodeBase64(secretKey), chatSecretKey: nacl.util.encodeBase64(chatSecretKey) }
-      var chatSKey32 = state.chat.sKey.slice(0, 32)
+      var chatSKey32 = state.chat.dKey.slice(0, 32)
       var box = encryptBox(message, theirPublicKey, nacl.util.encodeBase64(chatSKey32))
       state.chat.archive.writeFile('/boxes/' + theirPublicKey + '.txt', box, err => {
         if (err) {
@@ -270,7 +270,7 @@ function store (state, emitter) {
                     if (archive.writeable) {
                       state.chat.archive = archive
                       state.chat.key = keyHex
-                      state.chat.sKey = secretKey
+                      state.chat.dKey = chatSecretKey
                       emitter.emit('render')
                     } else {
                       data = { archive, secretKey, keyHex, chatSecretKey }
@@ -330,7 +330,7 @@ function store (state, emitter) {
           )
           state.chat.archive = archive
           state.chat.key = keyHex
-          state.chat.sKey = chatSecretKey
+          state.chat.dKey = chatSecretKey
           emitter.emit('render')
         })
       })
@@ -365,6 +365,7 @@ function store (state, emitter) {
       chat.archive = chatArchive
       chat.sKey = secretKey
       chat.key = keyHex
+      chat.dKey = dKey
       state.chat = chat
 
       writeDatJson(() => {
