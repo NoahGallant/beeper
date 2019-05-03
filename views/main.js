@@ -22,27 +22,19 @@ const prefix = css`
 module.exports = mainView
 
 function mainView (state, emit) {
+  emit('DOMTitleChange', 'Dat Shopping List')
+
   const key = html`<input type="text" id="discoveryKey" placeholder="key">`
   const password = html`<input type="text" id="password" placeholder="password">`
-  const createChatInput = html`<input type="text" id="chatName" placeholder="Chat Name">`
-  const loadChatInput = html`<input type="text" id="chatKey" placeholder="Chat Key">`
   let divStack = []
+
+  console.log(state)
 
   /*
   if (window.localStorage.login.key && !state.loggedIn) {
     emit('login', { keyHex: window.localStorage.login.key, password: window.localStorage.login.password })
   } */
-
-  if (state.account && state.account.loggedIn) { // load application
-    if (state.chat) {
-      divStack.push(chatView(state, emit))
-    } else {
-      divStack.push(accountView(state, emit))
-      divStack.push(chatFormView())
-    }
-  } else {
-    divStack.push(loginView())
-  }
+  divStack.push(loginView())
 
   return html`
     <body class=${prefix}>
@@ -51,48 +43,6 @@ function mainView (state, emit) {
       ${divStack}
       </div>
       `
-
-  function chatFormView () {
-    return html`<div>
-                  <form onsubmit=${createChat}>
-                    ${createChatInput}
-                    <br/>
-                    <p>
-                      ${button.submit('Create new p2p chat')}
-                    </p>
-                  </form>
-                  <form onsubmit=${loadChat}>
-                    ${loadChatInput}
-                    <br/>
-                    <p>
-                      ${button.submit('Load p2p chat from key')}
-                    </p>
-                  </form>
-                `
-  }
-
-  function createChat (event) {
-    console.log('chat button hit')
-    const chatName = event.target.querySelector('#chatName').value
-    if (chatName) {
-      const submitButton = event.target.querySelector('input[type="submit"]')
-      submitButton.setAttribute('disabled', 'disabled')
-      state.loading = true
-      emit('createChat', { chatName })
-    }
-    event.preventDefault()
-  }
-
-  function loadChat (event) {
-    const chatKey = event.target.querySelector('#chatKey').value
-    if (chatKey) {
-      const submitButton = event.target.querySelector('input[type="submit"]')
-      submitButton.setAttribute('disabled', 'disabled')
-      state.loading = true
-      emit('loadChat', { chatKey })
-    }
-    event.preventDefault()
-  }
 
   function loginView () {
     return html`

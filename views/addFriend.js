@@ -16,42 +16,33 @@ const prefix = css`
   }
 `
 
-module.exports = addLinkView
+module.exports = addFriendView
 
-function addLinkView (state, emit) {
-  emit('DOMTitleChange', 'Dat Shopping List - Add Link')
+function addFriendView (state, emit) {
+  emit('DOMTitleChange', 'Beeperig - Adding Friend')
   const input = html`<input type="text" autofocus spellcheck="false">`
   input.isSameNode = function (target) {
     return (target && target.nodeName && target.nodeName === 'INPUT')
   }
+
+  state.viewing = 'adding'
+
+  let key = state.params.chatKey
 
   return html`
     <body class=${prefix}>
       ${header(state)}
       <div class="content">
         <h2>
-          Paste in a URL link or a hexadecimal key
+          Ask your friend to paste the following key in their app:
+          <br/>
+          ${key}.
+          <br/>
+          <br/>
+          Once your friend joins you will be redirected to the chat!
         </h2>
-        <form onsubmit=${submit}>
-          ${input}
-          <p>
-            ${button.submit('Submit')}
-          </p>
-        </form>
       </div>
       ${customAlert.alertBox(state, emit)}
     </body>
   `
-
-  function submit (event) {
-    const link = event.target.querySelector('input').value
-    if (link) {
-      const textInput = event.target.querySelector('input[type="text"]')
-      textInput.setAttribute('disabled', 'disabled')
-      const submitButton = event.target.querySelector('input[type="submit"]')
-      submitButton.setAttribute('disabled', 'disabled')
-      emit('addLink', link)
-    }
-    event.preventDefault()
-  }
 }

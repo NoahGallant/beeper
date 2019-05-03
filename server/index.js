@@ -26,13 +26,10 @@ function serveIndex (req, res, next) {
 }
 
 router.get('/', csp, serveIndex)
-router.get('/index.html', csp, serveIndex)
-router.get('/create', csp, serveIndex)
-router.get('/createAccount', csp, serveIndex)
-router.get('/login', csp, serveIndex)
-router.get('/add-link', csp, serveIndex)
-router.get('/account', csp, serveIndex)
-router.get('/doc/:key', csp, serveIndex)
+router.get('/account/:key', csp, serveIndex)
+router.get('/chat/:key', csp, serveIndex)
+router.get('/addFriendtoChat/:friendKey/:key', csp, serveIndex)
+router.get('/addToChat/:key/:writerKey', csp, serveIndex)
 
 const attachWebsocket = dbGateway(router)
 

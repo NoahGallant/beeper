@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "A PWA p2p web chat application",
   "author": "Noah Gallant",
-  "main": "server/index.js",
+  "main": "./server/index.js",
   "bin": {
     "beeper": "./server/index.js"
   },

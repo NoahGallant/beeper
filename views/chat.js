@@ -1,38 +1,31 @@
 const html = require('choo/html')
 const button = require('../components/button')
-const loadingView = require('./loading')
-const badRequestView = require('./badRequest')
 
 module.exports = chatListView
 
 function chatListView (state, emit) {
-  console.log('renderCalled')
-  if (!state.account || !state.chat) {
-    return badRequestView()
-  }
+  emit('DOMTitleChange', 'Chat')
+  state.viewing = 'chat'
 
-  let key = state.chat.key
-  let title = state.chat.settings.title
+  let key = state.params.key
 
   const addKeyInput = html`<input type="text" id="friendKey" placeholder="key">`
   const messageInput = html`<input type="text" id="message" placeholder="Message">`
 
   let messageDivs = []
 
-  if (!state.chat.data) {
-    if (state.chat.key) {
-      let keyHex = state.chat.key
-      emit('readChat', keyHex)
-    }
+  if (!state.chat || !state.chat.data) {
+    console.log('no data yet...')
   } else {
     for (var i in state.chat.data.messages) {
       let message = state.chat.data.messages[i]
       let value = message.message
       let id = message.timeId
+      let myKey = window.localStorage.getItem('account-key')
       let senderName = ''
       if (!message.senderKey) {
         senderName = 'Bot'
-      } else if (message.senderKey === state.account.key) {
+      } else if (message.senderKey === myKey) {
         senderName = 'Me'
       } else {
         let senderKey = message.senderKey
@@ -58,12 +51,15 @@ function chatListView (state, emit) {
       messageDivs.push(messageDiv)
     }
   }
-
-  return html`
-    <div class="chat">
-      <h2>
-        ${title}
-      </h2>
+  if (!state.authorized) {
+    return html`
+    <body>
+      Not authorized yet...
+    </body>
+    `
+  } else {
+    return html`
+    <body>
       Chat Key: ${key}
       <br/>
       <form onsubmit=${addKey}>
@@ -81,8 +77,10 @@ function chatListView (state, emit) {
         ${messageInput}
       </form>
       
-    </div>
+    </body>
   `
+  }
+
   function sendMessage (event) {
     const message = event.target.querySelector('#message').value
     if (message) {
@@ -94,11 +92,12 @@ function chatListView (state, emit) {
 
   function addKey (event) {
     const key = event.target.querySelector('#friendKey').value
+    let keyHex = state.params.key
     if (key) {
       const submitButton = event.target.querySelector('input[type="submit"]')
       submitButton.setAttribute('disabled', 'disabled')
       state.loading = true
-      emit('loadFriend', { keyHex: key, toChat: true })
+      emit('pushState', `/addFriendToChat/${key}/${keyHex}`)
     }
     event.preventDefault()
   }

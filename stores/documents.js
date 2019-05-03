@@ -11,29 +11,22 @@ function store (state, emitter) {
     emitter.emit('render')
   })
 
-  emitter.on('writeNewAccountRecord', (keyHex, docName) => {
-    ready(() => {
-      if (state.documents.find(doc => doc.key === keyHex)) return
-      writeDocumentRecord(keyHex, docName, err => {
-        if (err) throw err
-      })
-    })
-  })
-
   emitter.on('writeNewChatRecord', (keyHex, docName) => {
     ready(() => {
       if (state.documents.find(doc => doc.key === keyHex)) return
       writeDocumentRecord(keyHex, docName, err => {
         if (err) throw err
+        emitter.emit('pushState', `/chat/${keyHex}`)
       })
     })
   })
 
-  emitter.on('writeNewHelloRecord', (keyHex, docName) => {
+  emitter.on('writeNewAccountRecord', (keyHex, docName) => {
     ready(() => {
       if (state.documents.find(doc => doc.key === keyHex)) return
       writeDocumentRecord(keyHex, docName, err => {
         if (err) throw err
+        emitter.emit('pushState', `/account/${keyHex}`)
       })
     })
   })
