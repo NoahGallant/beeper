@@ -203,7 +203,6 @@ function store (state, emitter) {
     let archive = state.archive
     let message = { secretKey: nacl.util.encodeBase64(chatSecretKey) }
     var chatSKey32 = chatSecretKey.slice(0, 32)
-    console.log('adddingg....')
     var box = encryptBox(message, theirPublicKey, nacl.util.encodeBase64(chatSKey32))
     archive.writeFile('/boxes/' + Buffer.from(nacl.util.decodeBase64(theirPublicKey)).toString('hex') + '.txt', box, err => {
       if (err) {
@@ -257,12 +256,10 @@ function store (state, emitter) {
 
   function addFriend () {
     if (!state.authorizing) {
-      console.log('authorizing...')
       let archive = state.archive
       state.authorizing = true
       let friend = { key32: nacl.util.encodeBase64(toBuffer(state.params.key32, 'hex')) }
       addFriendToChat(friend, () => {
-        console.log('2 hopes this time')
         archive.db.authorize(toBuffer(state.params.writerKey, 'hex'), err => {
           if (err) {
             console.log('unable to authorize!~!')
@@ -289,14 +286,13 @@ function store (state, emitter) {
           archive.readFile('/boxes/' + Buffer.from(nacl.util.decodeBase64(key32)).toString('hex') + '.txt', 'utf8', (err, box) => {
             if (err) {
               console.log(err)
-              let accountKey = Buffer.from(nacl.decodeBase64(window.localStorage.getItem('account-key'))).toString('hex')
+              let accountKey = Buffer.from(nacl.util.decodeBase64(window.localStorage.getItem('account-key'))).toString('hex')
               emitter.emit('pushState', `/account/${accountKey}`)
               emitter.emit('render')
             } else {
               archive.readFile('.publicKey32', 'utf8', (err, publicKey) => {
                 if (err) throw err
                 else {
-                  console.log('publicKey: ' + publicKey)
                   let pKeyArray = nacl.util.decodeBase64(publicKey)
                   let pKey = nacl.util.encodeBase64(pKeyArray)
                   let sKey = nacl.util.encodeBase64(mySecretKey.slice(0, 32))
@@ -309,8 +305,7 @@ function store (state, emitter) {
                     let chat = {}
                     chat.settings = JSON.parse(settings)
                     chat.sKey = nacl.util.decodeBase64(secretKey)
-                    chat.key = state.key
-                    let key = state.key
+                    chat.key = state.params.key
                     state.chat = chat
                     state.chat.loaded = true
                     window.localStorage.setItem(`chat-secretKey`, secretKey)
@@ -493,7 +488,7 @@ function store (state, emitter) {
             let account = {}
             account.keyEncoded = key
             account.key32 = key32
-            account.key = state.key
+            account.key = state.params.key
             account.dKey = secretKey
             console.log('dkey: ' + account.dKey)
             state.account = account
