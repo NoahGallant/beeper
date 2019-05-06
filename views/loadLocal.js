@@ -19,23 +19,16 @@ const prefix = css`
 module.exports = addFriendView
 
 function addFriendView (state, emit) {
-  emit('DOMTitleChange', 'Beeper - Adding Friend')
+  emit('DOMTitleChange', 'Beeper - Loading local key...')
 
-  state.viewing = 'add'
-
-  let key = state.key
+  state.viewing = 'loadLocal'
 
   return html`
     <body class=${prefix}>
       ${header(state)}
       <div class="content">
         <h2>
-          Ask your friend to paste the following key in their app:
-          <br/>
-          ${key}.
-          <br/>
-          <br/>
-          Once your friend joins you will be redirected to the chat!
+          Loading local key...
         </h2>
       </div>
       ${customAlert.alertBox(state, emit)}

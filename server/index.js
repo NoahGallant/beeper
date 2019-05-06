@@ -29,7 +29,9 @@ router.get('/', csp, serveIndex)
 router.get('/account/:key', csp, serveIndex)
 router.get('/chat/:key', csp, serveIndex)
 router.get('/addFriendtoChat/:friendKey/:key', csp, serveIndex)
-router.get('/addToChat/:key/:writerKey', csp, serveIndex)
+router.get('/addToChat/:key/:writerKey/:key32', csp, serveIndex)
+router.get('/loadLocal/:key', csp, serveIndex)
+router.get('/writeLocal/:key/:chatKey', csp, serveIndex)
 
 const attachWebsocket = dbGateway(router)
 

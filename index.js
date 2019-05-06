@@ -11,6 +11,8 @@ const accountView = require('./views/account')
 const chatView = require('./views/chat')
 const addFriendView = require('./views/addFriend')
 const addToChatView = require('./views/addToChat')
+const loadLocalView = require('./views/loadLocal')
+const writeLocalView = require('./views/writeLocal')
 
 css('./index.css')
 
@@ -48,6 +50,8 @@ app.route('/', mainView)
 app.route('/account/:key', accountView)
 app.route('/chat/:key', chatView)
 app.route('/addFriendToChat/:key/:chatKey', addFriendView)
-app.route('/addToChat/:key/:writerKey', addToChatView)
+app.route('/addToChat/:key/:writerKey/:key32', addToChatView)
+app.route('/loadLocal/:key', loadLocalView)
+app.route('/writeLocal/:key/:chatKey', writeLocalView)
 
 app.mount('body')

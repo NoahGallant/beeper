@@ -16,6 +16,9 @@ function chatListView (state, emit) {
 
   if (!state.chat || !state.chat.data) {
     console.log('no data yet...')
+    if (state.chat && !state.chat.data) {
+      emit('update')
+    }
   } else {
     for (var i in state.chat.data.messages) {
       let message = state.chat.data.messages[i]
@@ -41,7 +44,7 @@ function chatListView (state, emit) {
         }
         if (!inList) {
           senderName = senderKey
-          emit('loadFriend', { keyHex: senderKey, toChat: false })
+          // emit('loadFriend', { keyHex: senderKey, toChat: false })
         } else {
           let sender = state.friends[senderKey]
           senderName = sender.info.name

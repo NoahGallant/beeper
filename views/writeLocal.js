@@ -16,26 +16,19 @@ const prefix = css`
   }
 `
 
-module.exports = addFriendView
+module.exports = writeLocalView
 
-function addFriendView (state, emit) {
+function writeLocalView (state, emit) {
   emit('DOMTitleChange', 'Beeper - Adding Friend')
 
-  state.viewing = 'add'
-
-  let key = state.key
+  state.viewing = 'writeLocal'
 
   return html`
     <body class=${prefix}>
       ${header(state)}
       <div class="content">
         <h2>
-          Ask your friend to paste the following key in their app:
-          <br/>
-          ${key}.
-          <br/>
-          <br/>
-          Once your friend joins you will be redirected to the chat!
+          Writing local key...
         </h2>
       </div>
       ${customAlert.alertBox(state, emit)}

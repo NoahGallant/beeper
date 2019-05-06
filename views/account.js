@@ -88,7 +88,7 @@ function accountView (state, emit) {
       const submitButton = event.target.querySelector('input[type="submit"]')
       submitButton.setAttribute('disabled', 'disabled')
       state.loading = true
-      emit('pushState', `/chat/${chatKey}`)
+      emit('pushState', `/loadLocal/${chatKey}`)
     }
     event.preventDefault()
   }

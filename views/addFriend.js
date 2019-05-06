@@ -40,9 +40,16 @@ function addFriendView (state, emit) {
           <br/>
           <br/>
           Once your friend joins you will be redirected to the chat!
+          <br/>
+          <form onsubmit=${update}>
+          ${button.submit('Refresh')}
+          </form>
         </h2>
       </div>
       ${customAlert.alertBox(state, emit)}
     </body>
   `
+  function update () {
+    emit('update')
+  }
 }

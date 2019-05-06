@@ -191,7 +191,8 @@ function store (state, emitter) {
         let accountInfo = JSON.parse(contents)
         let key32 = accountInfo.key32
         let friend = { key: state.params.key, key32: key32 }
-        addFriendToChat(friend, cb)
+        state.addFriend = friend
+        cb()
       }
     })
   }
@@ -202,15 +203,13 @@ function store (state, emitter) {
     let archive = state.archive
     let message = { secretKey: nacl.util.encodeBase64(chatSecretKey) }
     var chatSKey32 = chatSecretKey.slice(0, 32)
-    console.log('??????????????')
-    console.log(chatSKey32)
-    console.log(theirPublicKey)
-
+    console.log('adddingg....')
     var box = encryptBox(message, theirPublicKey, nacl.util.encodeBase64(chatSKey32))
-    archive.writeFile('/boxes/' + theirPublicKey + '.txt', box, err => {
+    archive.writeFile('/boxes/' + Buffer.from(nacl.util.decodeBase64(theirPublicKey)).toString('hex') + '.txt', box, err => {
       if (err) {
-        throw err
+        console.log(err)
       } else {
+        console.log('going back and....')
         cb()
       }
     })
@@ -225,6 +224,10 @@ function store (state, emitter) {
       tryAddFriend()
     } else if (state.viewing === 'add') {
       addFriend()
+    } else if (state.viewing === 'loadLocal') {
+      getChatLocalKey()
+    } else if (state.viewing === 'writeLocal') {
+      writeChat()
     }
 
     emitter.emit('render')
@@ -236,29 +239,42 @@ function store (state, emitter) {
     if (!state.added) {
       loadFriend(() => {
         state.added = true
-        tryAddFriend()
       })
     } else {
       archive.readFile('/chats/' + chatKey + '.txt', 'utf8', (err, data) => {
         if (err) {
           console.log('Not updated yet!')
         } else {
-          emitter.emit('pushState', '/addToChat/:' + chatKey + '/:' + data)
+          let key32 = state.addFriend.key32
+          let dKey32 = nacl.util.decodeBase64(key32)
+          let key32Hex = Buffer.from(dKey32).toString('hex')
+          emitter.emit('pushState', '/addToChat/' + chatKey + '/' + data + '/' + key32Hex)
+          emitter.emit('render')
         }
       })
     }
   }
 
   function addFriend () {
-    let archive = state.archive
-    archive.authorize(toBuffer(state.params.writerKey, 'hex'), err => {
-      if (err) {
-        customAlert.show('Error while authorizing: ' + err.message)
-      } else {
-        emitter.emit('writeNewChatRecord', state.params.key, 'chat')
-        emitter.emit('render')
-      }
-    })
+    if (!state.authorizing) {
+      console.log('authorizing...')
+      let archive = state.archive
+      state.authorizing = true
+      let friend = { key32: nacl.util.encodeBase64(toBuffer(state.params.key32, 'hex')) }
+      addFriendToChat(friend, () => {
+        console.log('2 hopes this time')
+        archive.db.authorize(toBuffer(state.params.writerKey, 'hex'), err => {
+          if (err) {
+            console.log('unable to authorize!~!')
+          } else {
+            console.log('right foot lets go')
+            let keyHex = state.params.key
+            emitter.emit('pushState', `/chat/${keyHex}`)
+            emitter.emit('render')
+          }
+        })
+      })
+    }
   }
 
   function readChat () {
@@ -266,21 +282,20 @@ function store (state, emitter) {
       let archive = state.archive
       let key32 = window.localStorage.getItem('account-key32')
       let mySecretKey = nacl.util.decodeBase64(window.localStorage.getItem('account-dKey'))
-      console.log('msk: ' + mySecretKey)
       archive.readFile('/settings.json', 'utf8', (err, settings) => {
         if (err) {
           console.log(err)
         } else {
-          archive.readFile('/boxes/' + key32 + '.txt', 'utf8', (err, box) => {
+          archive.readFile('/boxes/' + Buffer.from(nacl.util.decodeBase64(key32)).toString('hex') + '.txt', 'utf8', (err, box) => {
             if (err) {
               console.log(err)
-              state.chat = null
-              state.chatError = 2
+              let accountKey = Buffer.from(nacl.decodeBase64(window.localStorage.getItem('account-key'))).toString('hex')
+              emitter.emit('pushState', `/account/${accountKey}`)
+              emitter.emit('render')
             } else {
               archive.readFile('.publicKey32', 'utf8', (err, publicKey) => {
                 if (err) throw err
                 else {
-                  console.log('here!')
                   console.log('publicKey: ' + publicKey)
                   let pKeyArray = nacl.util.decodeBase64(publicKey)
                   let pKey = nacl.util.encodeBase64(pKeyArray)
@@ -311,40 +326,55 @@ function store (state, emitter) {
         }
       })
     } else {
+      console.log('checking if authorized...')
       let archive = state.archive
       archive.db.authorized(archive.db.local.key, (err, authorized) => {
         if (err) { throw err }
         if (authorized) {
           state.authorized = true
-          archive.readFile('/chat.enc.json', 'utf8', (err, data) => {
-            if (err) { throw err }
-            let sKey32 = state.chat.sKey.slice(0, 32)
-            let chatData = decryptSecret(data, nacl.util.encodeBase64(sKey32))
-            state.chat.data = {}
-            state.chat.data.messages = JSON.parse(chatData.chat)
-            state.loaded = true
-            emitter.emit('render')
-          })
         } else {
-          console.log('not authorized')
-          emitter.emit('render')
+          state.authorized = false
         }
+      })
+      archive.readFile('/chat.enc.json', 'utf8', (err, data) => {
+        if (err) { throw err }
+        let sKey32 = state.chat.sKey.slice(0, 32)
+        let chatData = decryptSecret(data, nacl.util.encodeBase64(sKey32))
+        console.log(chatData)
+        state.chat.data = {}
+        state.chat.data.messages = JSON.parse(chatData.chat)
+        emitter.emit('render')
       })
     }
   }
 
-  emitter.on('loadChat', data => {
-    let keyHex = data.keyHex
+  emitter.on('update', () => {
+    update()
+  })
+
+  function getChatLocalKey () {
     let archive = state.archive
-    archive.writeFile(`/chats/${keyHex}.txt`, archive.db.local.key, err => {
+    window.localStorage.setItem('chat-localKey', archive.db.local.key.toString('hex'))
+    let accountKey = window.localStorage.getItem('account-key')
+    let chatKey = state.params.key
+    emitter.emit('pushState', `/writeLocal/${accountKey}/${chatKey}`)
+  }
+
+  function writeChat () {
+    let keyHex = state.params.chatKey
+    let archive = state.archive
+    console.log(`/chats/${keyHex}.txt`)
+    let localKey = window.localStorage.getItem('chat-localKey') // view if
+    archive.writeFile(`/chats/${keyHex}.txt`, localKey, err => {
       if (err) {
         console.log('unable to write...')
       } else {
-        emitter.emit('pushState', `/chat/:${keyHex}`)
+        emitter.emit('writeNewAccountRecord', state.params.key, 'Account')
+        emitter.emit('pushState', `/chat/${keyHex}`)
         emitter.emit('render')
       }
     })
-  })
+  }
 
   emitter.on('createChat', data => {
     const chatName = data.chatName
@@ -432,6 +462,7 @@ function store (state, emitter) {
       if (err) {
         console.log(err)
       } else {
+        emitter.emit('writeNewAccountRecord', state.params.key, 'Account Created')
         emitter.emit('render')
       }
     })
