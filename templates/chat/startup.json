@@ -1,29 +1,9 @@
-[
-    {
-        "timeId": 0,
-        "message": "Hello!",
-        "attachments": [],
-        "senderKey": "",
-        "signedMessage": "",
-        "signedAttachments": [],
-        "reactions":[]
-    },
-    {   
-        "timeId": 0,
-        "message": "Hello!",
-        "attachments": [],
-        "senderKey": "",
-        "signedMessage": "",
-        "signedAttachments": [],
-        "reactions":[]
-    },
-    {   
-        "timeId": 0,
-        "message": "Hello!",
-        "attachments": [],
-        "senderKey": "",
-        "signedMessage": "",
-        "signedAttachments": [],
-        "reactions":[]
-    }
-]
+{   
+    "timeId": 0,
+    "message": "Welcome to beeper!",
+    "attachments": [],
+    "senderKey": "",
+    "signedMessage": "",
+    "signedAttachments": [],
+    "reactions":[]
+}

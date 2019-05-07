@@ -32,7 +32,10 @@ function chatListView (state, emit) {
         senderName = 'Me'
       } else {
         let senderKey = message.senderKey
-        if (!state.friends) { state.friends = [] }
+        if (!state.friends) {
+          state.friends = []
+          emit('loadFriends')
+        }
         let inList = false
         let friend = {}
         for (var j in state.friends) {
@@ -43,7 +46,7 @@ function chatListView (state, emit) {
           }
         }
         if (!inList) {
-          senderName = senderKey
+          senderName = senderKey.slice(0, 5) + '...'
           // emit('loadFriend', { keyHex: senderKey, toChat: false })
         } else {
           let sender = state.friends[senderKey]
