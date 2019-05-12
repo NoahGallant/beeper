@@ -1,20 +1,7 @@
 const html = require('choo/html')
-const css = require('sheetify')
 const header = require('../components/header')
 const button = require('../components/button')
 const createAccountForm = require('./createAccount')
-
-const prefix = css`
-  :host {
-    .content {
-      margin: 1em;
-    }
-    input[type="text"] {
-      width: 100%;
-      font-size: 1.5rem;
-    }
-  }
-`
 
 module.exports = mainView
 
@@ -32,17 +19,15 @@ function mainView (state, emit) {
   if (setKey) {
     divStack.push(loginView(setKey))
   }
+  if (setKey && window.localStorage.getItem('account-dKey')) {
+    emit('pushState', '/account/' + setKey)
+    emit('render')
+  }
 
-  console.log(state)
-
-  /*
-  if (window.localStorage.login.key && !state.loggedIn) {
-    emit('login', { keyHex: window.localStorage.login.key, password: window.localStorage.login.password })
-  } */
   divStack.push(createAccountForm(state, emit))
 
   return html`
-    <body class=${prefix}>
+    <body>
       ${header(state)}
       <div class="content">
         ${divStack}
@@ -70,7 +55,7 @@ function mainView (state, emit) {
     const password = event.target.querySelector('#password').value
     const accountKey = window.localStorage.getItem('account-key')
     if (password && accountKey) {
-      window.localStorage.setItem('password', password) // this needs to be changed lol
+      window.localStorage.setItem('password', password) // this needs to be changed
       emit('pushState', '/account/' + accountKey)
       emit('render')
     }

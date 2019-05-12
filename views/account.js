@@ -16,6 +16,7 @@ function accountView (state, emit) {
   loadChatInput.isSameNode = function (target) {
     return (target && target.nodeName && target.nodeName === 'INPUT')
   }
+
   state.viewing = 'account'
 
   let localDetails = state.localDetails
@@ -57,6 +58,7 @@ function accountView (state, emit) {
         </h2>
         <div class="key">
           Your account key: ${keyHex}
+          <button onclick=${logout}>Logout</button>
         </div>
         <form onsubmit=${updateDetails}>
           ${inputs}
@@ -95,6 +97,10 @@ function accountView (state, emit) {
                   </form>
                   </div>
                 `
+  }
+
+  function logout () {
+    emit('logout')
   }
 
   function createChat (event) {

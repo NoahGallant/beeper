@@ -1,21 +1,20 @@
+* {
+  --color-green: #3FED95;
+  --color-blue: #55B9FF;
+  --color-red: #ED6269;
+  --color-yellow: #FFCF56;
+  --lo-res: 'LoRes 12 OT Narrow Regular', sans-serif;
+  --arial: 'Arial', sans-serif;
+  --letter-spacing: 0.1em;
+  box-sizing: border-box;
+}
+
 body {
   display: flex;
   flex-direction: column;
-  font-family: 'Source Sans Pro','PT Sans',Calibri,sans-serif;
+  font-family: var(--arial);
+  letter-spacing: var(--letter-spacing);
   margin: 0 auto;
   overflow-x: hidden;
-  max-width: 800px;
-}
-
-* {
-  outline-color: var(--color-green);
-}
-
-.link {
-  text-decoration: none;
-  color: var(--color-green);
-}
-
-.link:focus {
-  outline: 1px dotted currentColor;
+  max-width: 1000px;
 }

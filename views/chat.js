@@ -128,6 +128,7 @@ function chatListView (state, emit) {
   function sendMessage (event) {
     const message = event.target.querySelector('#message').value
     if (message) {
+      event.target.querySelector('#message').value = ''
       state.loading = true
       emit('sendMessage', message)
     }

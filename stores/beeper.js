@@ -173,7 +173,6 @@ function store (state, emitter) {
         console.log(err)
         throw err
       } else {
-        console.log('sent')
       }
     })
   })
@@ -324,7 +323,7 @@ function store (state, emitter) {
   }
 
   function readChat () {
-    if (!state.chat || !state.chat.loaded) {
+    if (!state.chat || (!state.chat.loaded)) {
       let archive = state.archive
       let key32 = window.localStorage.getItem('account-key32')
       let mySecretKey = nacl.util.decodeBase64(window.localStorage.getItem('account-dKey'))
@@ -391,7 +390,6 @@ function store (state, emitter) {
                 state.chat.data.messages.push(JSON.parse(chatData.chat))
               })
             }
-
             emitter.emit('render')
           })
         } else {
@@ -587,8 +585,13 @@ function store (state, emitter) {
   })
 
   emitter.on('logout', () => {
+    state.archive = null
+    state.key = null
+    state.params = null
+    state.account = null
     window.localStorage.removeItem('account-key32')
     window.localStorage.removeItem('account-dKey')
+    window.localStorage.removeItem('password')
     emitter.emit('pushState', '/')
     emitter.emit('render')
   })
@@ -596,37 +599,55 @@ function store (state, emitter) {
   function getDetails () {
     let archive = state.archive
     if (!state.account) {
-      archive.readFile('/account/keys.txt', 'utf8', (err, keyBox) => {
-        if (err) {
-          state.archive = null
-          state.key = null
-          state.loginError = 1
-          window.localStorage.removeItem('password')
-          emitter.emit('pushState', '/')
-          emitter.emit('render')
-        } else {
-          let secretBoxWithNonce = keyBox
-          let boxKey = nacl.util.encodeBase64(nacl.hash(nacl.util.decodeUTF8(window.localStorage.getItem('password'))).slice(0, 32))
-          const { key, secretKey, key32 } = decryptSecret(secretBoxWithNonce, boxKey)
-          if (key && secretKey && key32) {
-            let account = {}
-            account.keyEncoded = key
-            account.key32 = key32
-            account.key = state.params.key
-            account.dKey = nacl.util.decodeBase64(secretKey)
-            state.account = account
-            window.localStorage.setItem('account-key32', account.key32)
-            window.localStorage.setItem('account-dKey', secretKey)
-            window.localStorage.setItem('account-key', account.key)
+      if (window.localStorage.getItem('account-dKey')) {
+        console.log('dKey entry')
+        let account = {}
+        account.key32 = window.localStorage.getItem('account-key32')
+        account.key = state.params.key
+        account.dKey = nacl.util.decodeBase64(window.localStorage.getItem('account-dKey'))
+        state.account = account
+        setLocalDetails()
+        emitter.emit('render')
+      } else {
+        archive.readFile('/account/keys.txt', 'utf8', (err, keyBox) => {
+          if (err) {
+            state.archive = null
+            state.key = null
+            state.loginError = 1
             window.localStorage.removeItem('password')
-            setLocalDetails()
-            emitter.emit('render')
-          } else {
             emitter.emit('pushState', '/')
             emitter.emit('render')
+          } else {
+            let secretBoxWithNonce = keyBox
+            console.log(window.localStorage.getItem('password'))
+            let boxKey = nacl.util.encodeBase64(nacl.hash(nacl.util.decodeUTF8(window.localStorage.getItem('password'))).slice(0, 32))
+            let response = decryptSecret(secretBoxWithNonce, boxKey)
+            if (response) {
+              const { key, secretKey, key32 } = response
+              console.log('password entry')
+              let account = {}
+              account.keyEncoded = key
+              account.key32 = key32
+              account.key = state.params.key
+              account.dKey = nacl.util.decodeBase64(secretKey)
+              state.account = account
+              window.localStorage.setItem('account-key32', account.key32)
+              window.localStorage.setItem('account-dKey', secretKey)
+              window.localStorage.setItem('account-key', account.key)
+              window.localStorage.removeItem('password')
+              setLocalDetails()
+              emitter.emit('render')
+            } else {
+              console.log('wrong password entry')
+              state.archive = null
+              state.key = null
+              state.loginError = 2
+              emitter.emit('pushState', '/')
+              emitter.emit('render')
+            }
           }
-        }
-      })
+        })
+      }
     } else {
       setLocalDetails()
     }
