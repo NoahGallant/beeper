@@ -23,19 +23,12 @@ function addFriendView (state, emit) {
 
   state.viewing = 'add'
 
-  let key = state.key
-
   return html`
     <body class=${prefix}>
       ${header(state)}
       <div class="content">
         <h2>
-          Ask your friend to paste the following key in their app:
-          <br/>
-          ${key}.
-          <br/>
-          <br/>
-          Once your friend joins you will be redirected to the chat!
+          Connecting...
         </h2>
       </div>
       ${customAlert.alertBox(state, emit)}

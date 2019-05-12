@@ -6,9 +6,16 @@ let accountInputs = []
 module.exports = accountView
 
 function accountView (state, emit) {
+  emit('DOMTitleChange', 'Beeper - Account')
+
   const createChatInput = html`<input type="text" id="chatName" placeholder="Chat Name">`
   const loadChatInput = html`<input type="text" id="chatKey" placeholder="Chat Key">`
-  
+  createChatInput.isSameNode = function (target) {
+    return (target && target.nodeName && target.nodeName === 'INPUT')
+  }
+  loadChatInput.isSameNode = function (target) {
+    return (target && target.nodeName && target.nodeName === 'INPUT')
+  }
   state.viewing = 'account'
 
   let localDetails = state.localDetails
@@ -21,11 +28,24 @@ function accountView (state, emit) {
     if (key !== 'key32') {
       let value = String(localDetails[key])
       let input = html`<input type="text" id="${key}" placeholder="${key}" value="${value}" autofocus>`
+      input.isSameNode = function (target) {
+        return (target && target.nodeName && target.nodeName === 'INPUT')
+      }
       accountInputs.push(input)
     }
   }
 
   let inputs = accountInputs
+
+  let chatLinks = []
+  if (!state.chats) {
+    emit('loadChats')
+  } else {
+    for (var j in state.chats) {
+      let chatKey = state.chats[j]
+      chatLinks.push(html`<button id='${chatKey}' onclick='${loadExistingChat}'>${chatKey}</button><br/>`)
+    }
+  }
 
   if (state.account) {
     let keyHex = state.params.key
@@ -42,7 +62,12 @@ function accountView (state, emit) {
           ${inputs}
           ${button.submit('Update your details!')}
         </form>
+        <h3>
+        Chats
+        </h3>
         ${chatFormView()}
+        <br/>
+        ${chatLinks}
       </body>
     `
   } else {
@@ -51,6 +76,7 @@ function accountView (state, emit) {
       Loading account...
     </body>`
   }
+
   function chatFormView () {
     return html`<div>
                   <form onsubmit=${createChat}>
@@ -78,6 +104,17 @@ function accountView (state, emit) {
       submitButton.setAttribute('disabled', 'disabled')
       state.loading = true
       emit('createChat', { chatName })
+    }
+    event.preventDefault()
+  }
+
+  function loadExistingChat (event) {
+    const chatKey = event.target.id
+    if (chatKey) {
+      state.loading = true
+
+      emit('setDetailsLocalStorage')
+      emit('pushState', `/chat/${chatKey}`)
     }
     event.preventDefault()
   }

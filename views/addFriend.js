@@ -19,7 +19,7 @@ const prefix = css`
 module.exports = addFriendView
 
 function addFriendView (state, emit) {
-  emit('DOMTitleChange', 'Beeperig - Adding Friend')
+  emit('DOMTitleChange', 'Beeper - Adding Friend')
   const input = html`<input type="text" autofocus spellcheck="false">`
   input.isSameNode = function (target) {
     return (target && target.nodeName && target.nodeName === 'INPUT')
@@ -36,7 +36,7 @@ function addFriendView (state, emit) {
         <h2>
           Ask your friend to paste the following key in their app:
           <br/>
-          ${key}.
+          ${key}
           <br/>
           <br/>
           Once your friend joins you will be redirected to the chat!
