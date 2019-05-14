@@ -1,6 +1,5 @@
 const html = require('choo/html')
 const header = require('../components/header')
-const button = require('../components/button')
 const createAccountForm = require('./createAccount')
 
 module.exports = mainView
@@ -8,7 +7,7 @@ module.exports = mainView
 function mainView (state, emit) {
   emit('DOMTitleChange', 'Beeper - Home')
 
-  const password = html`<input type="text" id="password" placeholder="password">`
+  const password = html`<input type="password" id="password" placeholder="password">`
   password.isSameNode = function (target) {
     return (target && target.nodeName && target.nodeName === 'INPUT')
   }
@@ -38,14 +37,12 @@ function mainView (state, emit) {
   function loginView (setKey) {
     return html`
       <div class="login">
-        <h2>
-          Enter credentials to log in to: ${setKey}
-        </h2>
-        <form onsubmit=${login}>
+        <div class='tag'>
+          <span>Account:</span> ${setKey}
+        </div>
+        <form onsubmit=${login} class='flex'>
           ${password}
-          <p>
-            ${button.submit('Login')}
-          </p>
+          <button class='button'>Login</button>
         </form>
       </div>
     `

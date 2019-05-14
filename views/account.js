@@ -1,5 +1,6 @@
 const html = require('choo/html')
 const button = require('../components/button')
+const header = require('../components/header')
 
 let accountInputs = []
 
@@ -24,19 +25,27 @@ function accountView (state, emit) {
   console.log(localDetails)
 
   accountInputs = []
+  let inputs = []
 
   for (var key in localDetails) {
     if (key !== 'key32') {
       let value = String(localDetails[key])
-      let input = html`<input type="text" id="${key}" placeholder="${key}" value="${value}" autofocus>`
+      let input = html`<input type="text" id="${key}" placeholder="${key}" value="${value}">`
       input.isSameNode = function (target) {
         return (target && target.nodeName && target.nodeName === 'INPUT')
       }
-      accountInputs.push(input)
+      let inputDiv = html`
+      <div class="measure pa1 pt2">
+        <label for="${key}" class="f6 db mb2">${key}</label>
+        ${input}
+      </div>  
+      `
+      inputs.push(input)
+      accountInputs.push(inputDiv)
     }
   }
 
-  let inputs = accountInputs
+  let inputDivs = accountInputs
 
   let chatLinks = []
   if (!state.chats) {
@@ -44,56 +53,53 @@ function accountView (state, emit) {
   } else {
     for (var j in state.chats) {
       let chatKey = state.chats[j]
-      chatLinks.push(html`<button id='${chatKey}' onclick='${loadExistingChat}'>${chatKey}</button><br/>`)
+      let abbr = chatKey.slice(0, 8) + '...'
+      chatLinks.push(html`<button id='${chatKey}' class='chat-link pa3 ma2' onclick='${loadExistingChat}'>${abbr}</button><br/>`)
     }
   }
 
   if (state.account) {
     let keyHex = state.params.key
+    emit('setDetailsLocalStorage')
 
     return html`
       <body>
-        <h2>
-          Beeper
-        </h2>
-        <div class="key">
-          Your account key: ${keyHex}
-          <button onclick=${logout}>Logout</button>
+        ${header(state)}
+        <div class='content'>
+          <div class="account pb2 mb5">
+            <div class="key flex items-stretch">
+              <div class="tag flex items-center justify-left">
+                <span>Account key</span>: ${keyHex}
+              </div>
+              <button onclick=${logout} class='logout'>Logout</button>
+            </div>
+            <form class="form pa3" onsubmit=${updateDetails}>
+              <div class="inputs flex justify-between flex-wrap">
+                ${inputDivs}
+              </div>
+              <input type='submit' class='button' value='Update your details'/>
+            </form>
+          </div>
+          ${chatFormView()}
+          <br/>
+          <div class='chatLinks flex flex-wrap'>
+            ${chatLinks}
+          </div>
         </div>
-        <form onsubmit=${updateDetails}>
-          ${inputs}
-          ${button.submit('Update your details!')}
-        </form>
-        <h3>
-        Chats
-        </h3>
-        ${chatFormView()}
-        <br/>
-        ${chatLinks}
       </body>
     `
   } else {
     return html`
     <body>
-      Loading account...
+      
     </body>`
   }
 
   function chatFormView () {
-    return html`<div>
-                  <form onsubmit=${createChat}>
+    return html`<div class='createChat'>
+                  <form onsubmit=${createChat} class='flex w-100'>
                     ${createChatInput}
-                    <br/>
-                    <p>
-                      ${button.submit('Create new p2p chat')}
-                    </p>
-                  </form>
-                  <form onsubmit=${loadChat}>
-                    ${loadChatInput}
-                    <br/>
-                    <p>
-                      ${button.submit('Load p2p chat from key')}
-                    </p>
+                    <input type='submit' class='button' value='Create New Chat'/>
                   </form>
                   </div>
                 `
@@ -128,11 +134,8 @@ function accountView (state, emit) {
   function loadChat (event) {
     const chatKey = event.target.querySelector('#chatKey').value
     if (chatKey) {
-      const submitButton = event.target.querySelector('input[type="submit"]')
-      submitButton.setAttribute('disabled', 'disabled')
       state.loading = true
 
-      emit('setDetailsLocalStorage')
       emit('pushState', `/loadLocal/${chatKey}`)
     }
     event.preventDefault()

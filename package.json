@@ -44,6 +44,7 @@
     "sheetify": "^7.3.2",
     "sheetify-nested": "^1.0.2",
     "sw-precache": "^5.2.1",
+    "tachyons": "^4.11.1",
     "thunky": "^1.0.2",
     "to-buffer": "^1.1.1",
     "tweetnacl": "^1.0.1",

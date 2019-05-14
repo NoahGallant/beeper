@@ -5,14 +5,18 @@ module.exports = header
 
 function header (state) {
   return html`
-    <nav class='top-bar'>
-      <a href="/">
-        <img src="/img/dat-hexagon.svg" alt="Dat Project Logo">
-        <span class="title">
-          <span class="first-word">Dat</span> Shopping List
-        </span>
-      </a>
-      ${statusDisplay(state)}
+    <nav>
+      <div class='bg'> </div>
+      <div class='top-bar flex justify-between'>
+        <div class='flex items-center'>
+          <div class='logo flex items-center justify-center'>
+            :-)
+          </div>
+        </div>
+        <div class='status flex items-center justify-center'>
+          ${statusDisplay(state)}
+        </div>
+      </div>
     </nav>
   `
 }

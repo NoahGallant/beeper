@@ -14,6 +14,7 @@ const addToChatView = require('./views/addToChat')
 const loadLocalView = require('./views/loadLocal')
 const writeLocalView = require('./views/writeLocal')
 
+css('tachyons')
 css('./index.css')
 
 const app = choo()

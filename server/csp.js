@@ -17,6 +17,6 @@ module.exports = csp({
       }
     ],
     scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-    styleSrc: ["'self'", "'unsafe-inline'"]
+    styleSrc: ["'self'", "'unsafe-inline'", 'use.typekit.net', 'p.typekit.net']
   }
 })

@@ -1,5 +1,6 @@
 const html = require('choo/html')
 const button = require('../components/button')
+const header = require('../components/header')
 
 module.exports = chatListView
 
@@ -32,7 +33,7 @@ function chatListView (state, emit) {
     `
   }
 
-  let accountButton = html`<button id='${accountKey}' onclick='${loadAccount}'>Account</button>`
+  let accountButton = html`<button id='${accountKey}' class='account-button pa2' onclick='${loadAccount}'>Back to Account</button>`
 
   if (!state.chat || !state.chat.data) {
     console.log('no data yet...')
@@ -46,6 +47,7 @@ function chatListView (state, emit) {
     })
     console.log('reading messages')
     for (var i in state.chat.data.messages) {
+      let prefix = ''
       let message = state.chat.data.messages[i]
       let value = message.message
       let id = message.timeId
@@ -54,8 +56,10 @@ function chatListView (state, emit) {
       let senderName = ''
       if (!message.senderKey) {
         senderName = 'Bot'
+        prefix = 'bot'
       } else if (message.senderKey === myKey) {
         senderName = 'Me'
+        prefix = 'me'
       } else {
         let senderKey = message.senderKey
         if (!state.friends) {
@@ -78,38 +82,44 @@ function chatListView (state, emit) {
           senderName = friend.accountInfo.name
         }
       }
-      let messageDiv = html`<div id="message-${id}">${senderName}: ${value}</div>`
+      let messageDiv = html`
+        <div class='message pa3 mb3 ${prefix}' id="message-${id}">
+          <span>${senderName}</span><br/>
+          ${value}
+        </div>`
       messageDivs.push(messageDiv)
     }
   }
   if (!state.authorized) {
     return html`
     <body>
-      Not authorized yet...
+
     </body>
     `
   } else {
     return html`
     <body>
-      ${accountButton}
-      <br/>
-      Chat Key: ${key}
-      <br/>
-      <form onsubmit=${addKey}>
-        ${addKeyInput}
-        <br/>
-        <p>
-            ${button.submit('Add key to chat')}
-        </p>
-      </form>
-      <br/>
-      <div>
-        ${messageDivs}
+      ${header(state)}
+      <div class='content'>
+        <div class='flex w-100 items-center justify-between mb3'>
+          ${accountButton}
+          <form class='flex addKeyForm items-center items-stretch' onsubmit=${addKey}>
+            ${addKeyInput}
+            <input type='submit' class='add-account-button' value='Add account to chat'/>
+          </form>
+        </div>
+        <div class='chat'>
+          <div class='tag flex items-center justify-left'>
+              <span>Chat Key:</span> ${key}
+          </div>
+          <div class='messages pa3 pb0 flex flex-column'>
+            ${messageDivs}
+          </div>
+          <form class='flex' onsubmit=${sendMessage}>
+            ${messageInput}
+          </form>
+        </div>
       </div>
-      <form onsubmit=${sendMessage}>
-        ${messageInput}
-      </form>
-      
     </body>
   `
   }
@@ -139,8 +149,6 @@ function chatListView (state, emit) {
     const key = event.target.querySelector('#friendKey').value
     let keyHex = state.params.key
     if (key) {
-      const submitButton = event.target.querySelector('input[type="submit"]')
-      submitButton.setAttribute('disabled', 'disabled')
       state.loading = true
       emit('pushState', `/addFriendToChat/${key}/${keyHex}`)
     }
