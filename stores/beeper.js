@@ -444,6 +444,7 @@ function store (state, emitter) {
           console.log('unable to write...')
         } else {
           emitter.emit('writeNewAccountRecord', state.params.key, 'Account')
+          emitter.emit('pushState', '/account/' + state.params.key)
           emitter.emit('render')
         }
       })
