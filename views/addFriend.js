@@ -21,7 +21,7 @@ function addFriendView (state, emit) {
         <div class='prompt pa3'>
           Ask your friend to go to the following link (once they are logged in):
           <br/><br/>
-          <span>https://localhost:5000/loadLocal/${key}</span>
+          <span>https://beeper-chat.herokuapp.com/loadLocal/${key}</span>
           <br/><br/>
           Once your friend joins you will be redirected to the chat!
         </div>
