@@ -177,6 +177,7 @@ function store (state, emitter) {
         console.log(err)
         throw err
       } else {
+        emitter.emit('render')
       }
     })
   })
@@ -443,7 +444,6 @@ function store (state, emitter) {
           console.log('unable to write...')
         } else {
           emitter.emit('writeNewAccountRecord', state.params.key, 'Account')
-          emitter.emit('pushState', `/chat/${keyHex}`)
           emitter.emit('render')
         }
       })
