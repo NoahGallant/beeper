@@ -344,7 +344,6 @@ function store (state, emitter) {
           archive.readFile('/boxes/' + Buffer.from(nacl.util.decodeBase64(key32)).toString('hex') + '.txt', 'utf8', (err, box) => {
             if (err) {
               console.log(err)
-              emitter.emit('render')
             } else {
               archive.readFile('.publicKey32', 'utf8', (err, publicKey) => {
                 console.log('hm')

@@ -131,6 +131,7 @@ function chatListView (state, emit) {
 
       emit('setDetailsLocalStorage')
       emit('pushState', `/account/${accountKey}`)
+      emit('render')
     }
     event.preventDefault()
   }
@@ -151,6 +152,7 @@ function chatListView (state, emit) {
     if (key) {
       state.loading = true
       emit('pushState', `/addFriendToChat/${key}/${keyHex}`)
+      emit('render')
     }
     event.preventDefault()
   }
